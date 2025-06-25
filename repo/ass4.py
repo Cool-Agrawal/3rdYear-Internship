@@ -1,4 +1,5 @@
-#ques 1Add commentMore actions
+
+#ques 1
 import csv
 data = [["Name","Address","Mobile","Email"],["A","Sector 5","9812742043","abc@gmail.com"],["B","Sector 9","9128302245","bcd2gmail.com"],["C","Sector 8","9618233640","cde@gmail.com"]]
 with open ("address_book.csv","w",newline="") as file:

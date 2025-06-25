@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 '''#csv filesAdd commentMore actions
+=======
+
+'''#csv files
+>>>>>>> a9e740445df3aafb6b8ce9e5e6f170108e776f10
 import csv
 data = [["Name","Age","Country"],["A","10","India"],["B","19","Aus"],["C","23","Jpn"]]
 with open ("data.csv","w",newline="") as file:

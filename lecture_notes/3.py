@@ -84,11 +84,9 @@ def fun(city1,city2 ,city3):
     print("city",city1)
 fun("a","b","c")
 
-def func(**city):
-    print("city",city[k])
-def func(k="a",j="b",l="c"):
-    print(k)
-func()
+def my_function(**city):
+    print("city",city["j"])
+my_function(k="abc",j="bcd")
 
 #file operation
 f= open("new1.txt","w")
