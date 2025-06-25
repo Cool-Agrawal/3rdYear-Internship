@@ -23,7 +23,7 @@ print("div",df1//df2)
 
 d1 = pd.DataFrame({'Name':['a','b','c'],'sub':['s1','s2','s3'],'mark':[100,92,71]})
 d2 = pd.DataFrame({'Name':['a','b','c'],'sub':['s31','s2','s3'],'mark':[10,9,1]})
-res = pd.concat([d1,d2],keys={'a','b'},ignore_index='True')
+res = pd.concat([d1,d2],keys={'a','b'},ignore_index=True)
 r = pd.concat([d1,d2],axis=1)
 print(res)
 print(r)
