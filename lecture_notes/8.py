@@ -1,5 +1,5 @@
 import numpy as np
-'''
+
 print(np.__version__)
 a = np.array([1,2,3])
 print(a)
@@ -46,7 +46,7 @@ arr = np.full((2,3),5)
 print(arr)
 arr = np.full((2,3),'a')
 print(arr)
-'''
+
 a = np.array([[[1,2,3],[4,5,6]],[[7,8,9], [10,11,12]]])
 print(a)
 print(a[0,1,2])
