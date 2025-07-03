@@ -1,0 +1,296 @@
+Enter password: ****
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 13
+Server version: 8.0.42 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2025, Oracle and/or its affiliates.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql> use database dannys_diner;
+ERROR 1049 (42000): Unknown database 'database'
+mysql> use dannys_diner;
+Database changed
+mysql> select * from menu;
++------------+--------------+-------+
+| product_id | product_name | price |
++------------+--------------+-------+
+|          1 | sushi        |    10 |
+|          2 | curry        |    15 |
+|          3 | ramen        |    12 |
++------------+--------------+-------+
+3 rows in set (0.00 sec)
+
+mysql> select * from sales;
++-------------+------------+------------+
+| customer_id | order_date | product_id |
++-------------+------------+------------+
+| A           | 2021-01-01 |          1 |
+| A           | 2021-01-01 |          2 |
+| A           | 2021-01-07 |          2 |
+| A           | 2021-01-10 |          3 |
+| A           | 2021-01-11 |          3 |
+| A           | 2021-01-11 |          3 |
+| B           | 2021-01-01 |          2 |
+| B           | 2021-01-02 |          2 |
+| B           | 2021-01-04 |          1 |
+| B           | 2021-01-11 |          1 |
+| B           | 2021-01-16 |          3 |
+| B           | 2021-02-01 |          3 |
+| C           | 2021-01-01 |          3 |
+| C           | 2021-01-01 |          3 |
+| C           | 2021-01-07 |          3 |
++-------------+------------+------------+
+15 rows in set (0.00 sec)
+
+mysql> select * from members;
++-------------+------------+
+| customer_id | join_date  |
++-------------+------------+
+| A           | 2021-01-07 |
+| B           | 2021-01-09 |
++-------------+------------+
+2 rows in set (0.00 sec)
+
+mysql> select customer_id,sum(price) from sales join menu on sales.product_id = menu.product_id group by customer_id;
++-------------+------------+
+| customer_id | sum(price) |
++-------------+------------+
+| A           |         76 |
+| B           |         74 |
+| C           |         36 |
++-------------+------------+
+3 rows in set (0.00 sec)
+
+mysql> select customer_id,count(order_date) from sales group by customer_id;
++-------------+-------------------+
+| customer_id | count(order_date) |
++-------------+-------------------+
+| A           |                 6 |
+| B           |                 6 |
+| C           |                 3 |
++-------------+-------------------+
+3 rows in set (0.00 sec)
+
+mysql> select distinct(customer_id),product_id from sales group by customer_id;
+ERROR 1055 (42000): Expression #2 of SELECT list is not in GROUP BY clause and contains nonaggregated column 'dannys_diner.sales.product_id' which is not functionally dependent on columns in GROUP BY clause; this is incompatible with sql_mode=only_full_group_by
+mysql> select customer_id,min(product_id) from sales group by customer_id;
++-------------+-----------------+
+| customer_id | min(product_id) |
++-------------+-----------------+
+| A           |               1 |
+| B           |               1 |
+| C           |               3 |
++-------------+-----------------+
+3 rows in set (0.00 sec)
+
+mysql> select customer_id,product_name from sales join menu on sales.product_id = menu.product_id
+    -> where (sales.customer_id,sales.product_id) in (select customer_id,min(product_id) from sales group by customer_id);
++-------------+--------------+
+| customer_id | product_name |
++-------------+--------------+
+| A           | sushi        |
+| B           | sushi        |
+| B           | sushi        |
+| C           | ramen        |
+| C           | ramen        |
+| C           | ramen        |
++-------------+--------------+
+6 rows in set (0.01 sec)
+
+mysql> select product_name from menu join sales on menu.product_id = sales.product_id;
++--------------+
+| product_name |
++--------------+
+| sushi        |
+| curry        |
+| curry        |
+| ramen        |
+| ramen        |
+| ramen        |
+| curry        |
+| curry        |
+| sushi        |
+| sushi        |
+| ramen        |
+| ramen        |
+| ramen        |
+| ramen        |
+| ramen        |
++--------------+
+15 rows in set (0.00 sec)
+
+mysql> select product_name from menu join sales on menu.product_id = sales.product_id where product_id in (select max(product_id) from sales ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 1
+mysql> select product_name from menu join sales on menu.product_id = sales.product_id where product_id in (select max(product_id) from sales) ;
+ERROR 1052 (23000): Column 'product_id' in IN/ALL/ANY subquery is ambiguous
+mysql> select product_name from menu join sales on menu.product_id = sales.product_id where sales.product_id in (selectmax(product_id) from sales) ;
++--------------+
+| product_name |
++--------------+
+| ramen        |
+| ramen        |
+| ramen        |
+| ramen        |
+| ramen        |
+| ramen        |
+| ramen        |
+| ramen        |
++--------------+
+8 rows in set (0.00 sec)
+
+mysql> select product_name,count(product_name) from menu join sales on menu.product_id = sales.product_id where sales.product_id in (select max(product_id) from sales group by product_id) ;
+ERROR 1140 (42000): In aggregated query without GROUP BY, expression #1 of SELECT list contains nonaggregated column 'dannys_diner.menu.product_name'; this is incompatible with sql_mode=only_full_group_by
+mysql> select product_name,count(product_name) from menu join sales on menu.product_id = sales.product_id where sales.product_id in (select max(product_id) from sales) ;
+ERROR 1140 (42000): In aggregated query without GROUP BY, expression #1 of SELECT list contains nonaggregated column 'dannys_diner.menu.product_name'; this is incompatible with sql_mode=only_full_group_by
+mysql> select product_name,count(product_name) from menu join sales on menu.product_id = sales.product_id where sales.product_id in (select max(product_id) from sales) group by product_name ;
++--------------+---------------------+
+| product_name | count(product_name) |
++--------------+---------------------+
+| ramen        |                   8 |
++--------------+---------------------+
+1 row in set (0.00 sec)
+
+mysql> select product_name from menu join sales on menu.product_id = sales.product_id where sales.product_id in (selectmax(product_id) from sales) limit 1 ;
++--------------+
+| product_name |
++--------------+
+| ramen        |
++--------------+
+1 row in set (0.00 sec)
+
+mysql> select product_name from menu join sales on menu.product_id = sales.product_id join members on sales.customer_id= members.customer_id where sales.order_date>members.join_date;
++--------------+
+| product_name |
++--------------+
+| sushi        |
+| ramen        |
+| ramen        |
+| ramen        |
+| ramen        |
+| ramen        |
++--------------+
+6 rows in set (0.00 sec)
+
+mysql> select customer_id,product_name from menu join sales on menu.product_id = sales.product_id join members on sales.customer_id = members.customer_id where sales.order_date>members.join_date;
+ERROR 1052 (23000): Column 'customer_id' in field list is ambiguous
+mysql> select sales.customer_id,product_name from menu join sales on menu.product_id = sales.product_id join members onsales.customer_id = members.customer_id where sales.order_date>members.join_date;
++-------------+--------------+
+| customer_id | product_name |
++-------------+--------------+
+| B           | sushi        |
+| B           | ramen        |
+| B           | ramen        |
+| A           | ramen        |
+| A           | ramen        |
+| A           | ramen        |
++-------------+--------------+
+6 rows in set (0.00 sec)
+
+mysql> select sales.customer_id,product_name from menu join sales on menu.product_id = sales.product_id join members onsales.customer_id = members.customer_id where sales.order date in(select min(order_date) from sales where sales.order_date>members.join_date);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'date in(select min(order_date) from sales where sales.order_date>members.join_da' atline 1
+mysql> select sales.customer_id,product_name from menu join sales on menu.product_id = sales.product_id join members onsales.customer_id = members.customer_id where sales.order_date in(select min(order_date) from sales where sales.order_date>members.join_date);
++-------------+--------------+
+| customer_id | product_name |
++-------------+--------------+
+| A           | ramen        |
++-------------+--------------+
+1 row in set (0.00 sec)
+
+mysql> select sales.customer_id,product_name from menu join sales on menu.product_id = sales.product_id join members onsales.customer_id = members.customer_id where sales.order_date in(select min(order_date) from sales where customer_id =sales.customer_id and sales.order_date>members.join_date);
++-------------+--------------+
+| customer_id | product_name |
++-------------+--------------+
+| A           | ramen        |
++-------------+--------------+
+1 row in set (0.00 sec)
+
+mysql> select s.customer_id,product_name from menu m join sales s on m.product_id = s.product_id join members mem on s.customer_id = m.customer_id where s.order_date in(select min(order_date) from sales where customer_id = s.customer_id and order_date>mem.join_date);
+ERROR 1054 (42S22): Unknown column 'm.customer_id' in 'on clause'
+mysql> select s.customer_id,product_name from menu m join sales s on m.product_id = s.product_id join members mem on s.customer_id = mem.customer_id where s.order_date in(select min(order_date) from sales where customer_id = s.customer_id and order_date>mem.join_date);
++-------------+--------------+
+| customer_id | product_name |
++-------------+--------------+
+| B           | sushi        |
+| A           | ramen        |
++-------------+--------------+
+2 rows in set (0.00 sec)
+
+mysql> select s.customer_id,product_name from menu m join sales s on m.product_id = s.product_id join members mem on s.customer_id = mem.customer_id where s.order_date in(select min(order_date) from sales where customer_id = s.customer_id and order_date<mem.join_date);
++-------------+--------------+
+| customer_id | product_name |
++-------------+--------------+
+| A           | sushi        |
+| B           | curry        |
+| A           | curry        |
++-------------+--------------+
+3 rows in set (0.00 sec)
+
+mysql> SELECT MIN(order_date)
+    -> FROM sales
+    -> WHERE customer_id = s.customer_id AND order_date < mem.join_date;
+ERROR 1054 (42S22): Unknown column 's.customer_id' in 'where clause'
+mysql> SELECT MIN(order_date)
+    -> FROM sales
+    -> select s.customer_id,product_name from menu m join sales s on m.product_id = s.product_id join members mem on s.customer_id = mem.customer_id where s.order_date in(select min(order_date) from sales where customer_id = s.customer_id and order_date<mem.join_date);
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'select s.customer_id,product_name from menu m join sales s on m.product_id = s.p' atline 3
+mysql> select s.customer_id,product_name from menu m join sales s on m.product_id = s.product_id join members mem on s.customer_id = mem.customer_id where s.order_date in(select min(order_date) from sales where customer_id = s.customer_id and order_date<mem.join_date);
++-------------+--------------+
+| customer_id | product_name |
++-------------+--------------+
+| A           | sushi        |
+| B           | curry        |
+| A           | curry        |
++-------------+--------------+
+3 rows in set (0.00 sec)
+
+mysql> select s.customer_id,sum(m.price) from menu m join sales s on m.product_id = s.product_id join members mem on s.customer_id = mem.customer_id where s.order_date in(select min(order_date) from sales where customer_id = s.customer_id and order_date<mem.join_date) group by s.customer_id;
++-------------+--------------+
+| customer_id | sum(m.price) |
++-------------+--------------+
+| A           |           25 |
+| B           |           15 |
++-------------+--------------+
+2 rows in set (0.00 sec)
+
+mysql> SELECT customer_id,
+    ->        SUM(
+    ->          IF(product_name = 'sushi', price * 20, price * 10)
+    ->        ) AS total_points
+    -> FROM sales
+    -> JOIN menu ON sales.product_id = menu.product_id
+    -> GROUP BY customer_id;
++-------------+--------------+
+| customer_id | total_points |
++-------------+--------------+
+| A           |          860 |
+| B           |          940 |
+| C           |          360 |
++-------------+--------------+
+3 rows in set (0.00 sec)
+
+mysql> select SALES.CUSTOMER_ID , SUM(
+    -> CASE
+    -> WHEN ORDER_DATE BETWEEN MEMBERS.JOIN_DATE AND DATE_ADD(MEMBERS.JOIN_DATE,INTERVAL 6 DAY) THEN
+    -> MENU.PRICE*20
+    -> ELSE MENU.PRICE*10
+    -> END
+    -> )
+    -> AS TOTAL_POINTS
+    -> FROM MENU
+    -> JOIN SALES ON MENU.PRODUCT_ID = SALES.PRODUCT_ID JOIN MEMBERS ON SALES.CUSTOMER_ID = MEMBERS.CUSTOMER_ID
+    -> GROUP BY SALES.CUSTOMER_ID
+    -> ;
++-------------+--------------+
+| CUSTOMER_ID | TOTAL_POINTS |
++-------------+--------------+
+| B           |          840 |
+| A           |         1270 |
++-------------+--------------+
+2 rows in set (0.01 sec)
+
+mysql>
