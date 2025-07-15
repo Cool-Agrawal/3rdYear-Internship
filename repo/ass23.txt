@@ -1,0 +1,51 @@
+butils.widgets.text("arrival_date","2024-07-26")
+data_str = dbutils.widgets.get("arrival_date")
+print(data_str)
+
+#%%
+booking_data = f"/Volumes/workspace/internship/day23/bookings/bookings_{data_str}.csv"
+customers_data = f"/Volumes/workspace/internship/day23/customers/customers_{data_str}.csv"
+
+#%%
+booking_df = spark.read.format("csv").option("header","true").option("interschema","true").option("quote","\"").option("multiline","true").load(booking_data)
+booking_df.printSchema()
+
+customers_df = spark.read \
+    .format("csv")\
+    .option("header","true")\
+    .option("interschema","true")\
+    .option("quote","\"")\
+    .option("multiline","true")\
+    .load(customers_data)
+customers_df.printSchema()
+#%%
+SPARK_VERSION = 3.2
+#%%
+%pip install numpy
+%pip install git+https://github.com/awslabs/python-deequ.git
+#%%
+import os
+os.environ["SPARK_VERSION"] = "3.2"
+from pyspark.sql.functions import col, lit, current_timestamp , sum as _sum
+from delta.tables import DeltaTable
+from pydeequ.checks import Check,CheckLevel
+from pydeequ.verification import VerificationSuite, VerificationResult
+
+def check(df,cols):
+   return df.filter(col(cols).isNotNull())
+
+booking_df=check(booking_df,"booking_id")
+booking_df=check(booking_df,"customer_id")
+booking_df=check(booking_df,"amount")
+
+#%%
+booking_df.write.format("delta").mode("overwrite").saveAsTable("workspace.internship.booking_table")
+#%%
+booking_df.write.format("delta").mode("overwrite").saveAsTable("workspace.internship.booking_table1")
+#%%
+current_df = spark.read.format("delta").table("workspace.internship.booking_table")
+#%%
+next_df = spark.read.format("delta").table("workspace.internship.booking_table1")
+#%%
+joined_df = current_df.join(next_df,on="booking_id", how = "inner")
+display(joined_df)
