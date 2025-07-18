@@ -1,0 +1,33 @@
+df = spark.read.csv("/Volumes/workspace/internship.day_26/amazon.csv",inferSchema=True,header=True)
+df.printSchema()
+
+root
+ |-- product_id: string (nullable = true)
+ |-- product_name: string (nullable = true)
+ |-- category: string (nullable = true)
+ |-- discounted_price: string (nullable = true)
+ |-- actual_price: string (nullable = true)
+ |-- discount_percentage: string (nullable = true)
+ |-- rating: string (nullable = true)
+ |-- rating_count: string (nullable = true)
+ |-- about_product: string (nullable = true)
+ |-- user_id: string (nullable = true)
+ |-- user_name: string (nullable = true)
+ |-- review_id: string (nullable = true)
+ |-- review_title: string (nullable = true)
+ |-- review_content: string (nullable = true)
+ |-- img_link: string (nullable = true)
+ |-- product_link: string (nullable = true)
+
+#dimension table
+user_df = df.select("user_id", "user_name").dropDuplicates(["user_id"])
+
+#feature table
+product_df = df.select("product_id", "product_name", "category", "about_product", "img_link", "product_link").dropDuplicates(["product_id"])
+review_df = df.select("review_id", "review_title", "review_content","rating", "rating_count").dropDuplicates(["review_id"])
+price_df = df.select( "discounted_price", "actual_price", "discount_percentage")
+
+user_df.write.format("delta").mode("overwrite").saveAsTable("workspace.internship.user_table")
+product_df.write.format("delta").mode("overwrite").saveAsTable("workspace.internship.product_table")
+review_df.write.format("delta").mode("overwrite").saveAsTable("workspace.internship.review_table")
+price_df.write.format("delta").mode("overwrite").saveAsTable("workspace.internship.price_table")
